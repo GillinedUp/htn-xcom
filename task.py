@@ -21,15 +21,15 @@ def is_done(state, goal):
     return False
 
 
-def move(state, a, t, goal):
+def attack(state, a, t, goal):
     if is_done(state, goal):
         return []
     while any(state.ap[a] >= x for x in list(move_ap.values())):
-        return [('shoot', a, t), ('move', a, t, goal)]
+        return [('shoot', a, t), ('act', a, t, goal)]
     return False
 
 
-declare_methods('move', move)
+declare_methods('act', attack)
 
 state1 = State('state1')
 state1.weapons = {'ally': ['rifle'], 'enemy': ['rifle']}
@@ -39,4 +39,4 @@ state1.ap = {'ally': 20, 'enemy': 10}
 goal1 = Goal('goal1')
 goal1.hp = {'enemy': 0}
 
-pyhop(state1, [('move', 'ally', 'enemy', goal1)], verbose=3)
+pyhop(state1, [('act', 'ally', 'enemy', goal1)], verbose=3)
