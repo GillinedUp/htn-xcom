@@ -1,26 +1,19 @@
 from pyhop import *
 from math import *
 
-act_ap = {'shoot': 5, 'throw_grenade': 5}
-dmg = {'shoot': 5, 'throw_grenade': 10}
-assault_weapon = {'shoot': 'rifle', 'throw_grenade': 'grenade'}
+act_ap = {'shoot': 5, 'throw_grenade': 5, 'stab': 2}
+dmg = {'shoot': 5, 'throw_grenade': 10, 'stab': 20}
+assault_weapon = {'shoot': 'rifle', 'throw_grenade': 'grenade', 'stab': 'knife'}
 weapon_range = {'rifle': 10, 'grenade': 5, 'knife': 1}
-map_size = 20
 ap_dist_mul = 1
 
 
-def ap_to_dist(ap):
+def ap_to_steps(ap):
     return floor(ap * ap_dist_mul)
 
 
-def dist_to_ap(dist):
+def steps_to_ap(dist):
     return ceil(dist / ap_dist_mul)
-
-
-def distance(oldpos, newpos):
-    oldx, oldy = oldpos
-    newx, newy = newpos
-    return floor(sqrt(oldx * newx + oldy * newy))
 
 
 def shoot(state, a, t):
@@ -36,14 +29,19 @@ def throw_grenade(state, a, t):
     return state
 
 
-def walk(state, a, oldpos, newpos):
-    dist = distance(oldpos, newpos)
-    state.ap[a] = state.ap[a] - dist_to_ap(dist)
-    state.position[a] = newpos
+def walk(state, a, t, steps):
+    state.ap[a] = state.ap[a] - steps_to_ap(steps)
+    state.distance[a][t] = state.distance[a][t] - steps
     return state
 
 
-declare_operators(shoot, throw_grenade)
+def stab(state, a, t):
+    state.ap[a] = state.ap[a] - act_ap['stab']
+    state.hp[t] = state.hp[t] - dmg['stab']
+    return state
+
+
+declare_operators(shoot, throw_grenade, stab, walk)
 
 
 def is_done(state, goal):
@@ -69,26 +67,26 @@ def grenade_assault(state, a, t, goal):
     return assault(state, a, t, 'throw_grenade', goal)
 
 
-def move_gen(oldpos, newpos):
+def move_gen(steps):
     def move(state, a, t, goal):
-        dist = distance(oldpos, newpos)
-        if state.position[a] == oldpos and state.ap[a] >= dist_to_ap(dist):
-            return [('walk', a, oldpos, newpos), ('act', a, t, goal)]
+        if state.ap[a] >= steps_to_ap(dist):
+            return [('walk', a, t, steps), ('act', a, t, goal)]
         return False
 
     return move
 
 
-move_list = [move_gen((x1, y1), (x2, y2)) for x1 in range(map_size) for y1 in range(map_size)
-             for x2 in range(map_size) for y2 in range(map_size)]
+dist = 10
+
+move_list = [move_gen(x) for x in range(dist)]
 
 declare_methods('act', rifle_assault, grenade_assault, *move_list)
 
 state1 = State('state1')
 state1.weapons = {'ally': ['rifle', 'grenade'], 'enemy': ['rifle']}
-state1.hp = {'ally': 20, 'enemy': 20}
+state1.hp = {'ally': 20, 'enemy': 30}
 state1.ap = {'ally': 15, 'enemy': 10}
-state1.position = {'ally': (5, 0), 'enemy': (15, 0)}
+state1.distance = {'ally': {'enemy': dist}}
 
 goal1 = Goal('goal1')
 goal1.hp = {'enemy': 0}
