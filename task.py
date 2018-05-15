@@ -69,7 +69,7 @@ def grenade_assault(state, a, t, goal):
 
 def move_gen(steps):
     def move(state, a, t, goal):
-        if state.ap[a] >= steps_to_ap(dist):
+        if state.ap[a] >= steps_to_ap(state1.distance[a][t]) and steps <= state1.distance[a][t]:
             return [('walk', a, t, steps), ('act', a, t, goal)]
         return False
 
