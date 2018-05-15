@@ -15,10 +15,18 @@ def shoot(state, a, t):
 declare_operators(shoot)
 
 
-def move(state, a, t):
+def is_done(state, goal):
+    if state.hp['enemy'] == goal.hp['enemy']:
+        return True
+    return False
+
+
+def move(state, a, t, goal):
+    if is_done(state, goal):
+        return []
     while any(state.ap[a] >= x for x in list(move_ap.values())):
-        return [('shoot', a, t), ('move', a, t)]
-    return []
+        return [('shoot', a, t), ('move', a, t, goal)]
+    return False
 
 
 declare_methods('move', move)
@@ -31,4 +39,4 @@ state1.ap = {'ally': 20, 'enemy': 10}
 goal1 = Goal('goal1')
 goal1.hp = {'enemy': 0}
 
-pyhop(state1, [('move', 'ally', 'enemy')], verbose=3)
+pyhop(state1, [('move', 'ally', 'enemy', goal1)], verbose=3)
